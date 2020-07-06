@@ -1,0 +1,55 @@
+version: 2.1
+executors:
+    node-executor:
+        docker:
+            - image: circleci/node:latest
+jobs: 
+  setupjob: 
+    executor: node-executor 
+    steps:
+        - run:
+            command: | 
+                echo "export event1= true" >> $BASH_ENV
+                echo "export event2= true" >> $BASH_ENV
+  finaljob: 
+    executor: node-executor 
+    steps:
+        - run:
+            command: | 
+                echo "Final job"
+workflows:
+    waits-on-two-events:      
+        jobs:
+            - setupjob
+            - waitevent1:
+                type: approval    
+                requires:
+                    - setupjob              
+            - waitevent2:
+                type: approval
+                requires:
+                    - setupjob
+            - finaljob:
+                requires:
+                    - waitevent1
+                    - waitevent2
+    waits-only-on-event1:
+        jobs:
+            - setupjob
+            - waitevent1:
+                type: approval  
+                requires:
+                    - setupjob             
+            - finaljob:
+                requires:
+                    - waitevent1 
+    waits-only-on-event2:
+        jobs:
+            - setupjob
+            - waitevent2:
+                type: approval  
+                requires:
+                    - setupjob            
+            - finaljob:
+                requires:
+                    - waitevent2 
